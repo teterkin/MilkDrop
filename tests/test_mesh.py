@@ -15,6 +15,7 @@ from milkdrop.visualizer.mesh import (
     make_sphere,
     project,
     rotate,
+    taper_poles,
 )
 
 
@@ -74,6 +75,47 @@ def test_wireframe_visualizer_renders_uint8_and_reacts_to_audio():
         assert not np.array_equal(silence, loud)
     finally:
         pygame.quit()
+
+
+def test_sphere_scale_reacts_to_loudness_and_beat():
+    pygame.init()
+    try:
+        viz = SphereMeshVisualizer(width=32, height=24, num_bands=8)
+
+        viz.render(np.zeros(8), beat=False)
+        assert viz.scale == pytest.approx(1.0)
+
+        viz.render(np.ones(8), beat=True)
+        assert viz.scale > 1.0
+    finally:
+        pygame.quit()
+
+
+def test_sphere_base_spin_is_slower():
+    pygame.init()
+    try:
+        viz = SphereMeshVisualizer(width=32, height=24, num_bands=8)
+
+        viz.render(np.zeros(8), beat=False)
+        assert 0.0 < viz.angle < 0.01
+    finally:
+        pygame.quit()
+
+
+def test_sphere_starts_smaller_than_unit_radius():
+    viz = SphereMeshVisualizer(width=32, height=24, num_bands=8)
+    assert 0.0 < viz.radius < 1.0
+
+
+def test_taper_poles_keeps_pole_rows_fixed():
+    disp = np.array([0.0, 0.5, 1.0], dtype=np.float32)
+    sin_theta = np.array([0.0, 0.7, 1.0], dtype=np.float32)
+
+    rmap = taper_poles(disp, sin_theta)
+
+    assert rmap.shape == (3, 3)
+    assert np.allclose(rmap[0], 1.0)
+    assert np.allclose(rmap[2], 1.0 + disp)
 
 
 def test_make_sphere_places_vertices_on_radius():

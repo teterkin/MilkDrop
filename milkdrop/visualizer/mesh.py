@@ -49,6 +49,12 @@ def project(points, width, height, focal):
     return xs.astype(np.float32), ys.astype(np.float32)
 
 
+def taper_poles(displacement, sin_theta):
+    displacement = np.asarray(displacement, dtype=np.float32)
+    sin_theta = np.asarray(sin_theta, dtype=np.float32)
+    return 1.0 + displacement[None, :] * sin_theta[:, None]
+
+
 def _audio_profile(bands, n):
     bands = np.asarray(bands, dtype=np.float32)
     if bands.size:
@@ -131,7 +137,7 @@ class WireframeMeshVisualizer:
 
 
 class SphereMeshVisualizer:
-    def __init__(self, width, height, num_bands=64, n=24, radius=1.0, focal=2.6):
+    def __init__(self, width, height, num_bands=64, n=24, radius=0.7, focal=2.6):
         self.width = width
         self.height = height
         self.num_bands = num_bands
@@ -139,19 +145,24 @@ class SphereMeshVisualizer:
         self.radius = radius
         self.focal = focal
         self._base = make_sphere(n, radius).reshape(n, n, 3)
+        self._sin_theta = np.sin(np.linspace(0.0, np.pi, n, dtype=np.float32))
         self._surface = None
         self.angle = 0.0
         self.tilt = -0.35
+        self.scale = 1.0
 
     def render(self, bands, beat):
         n = self.n
         bass, treble, profile = _audio_profile(bands, n)
 
+        loud = float(profile.mean()) if profile.size else 0.0
+        self.scale = 1.0 + 0.35 * loud + (0.15 if beat else 0.0)
+
         amp = 0.15 + 0.6 * bass + (0.2 if beat else 0.0)
         wave = np.sin(np.linspace(0.0, 4.0 * np.pi, n) + self.angle * 2.0)
-        radial = 1.0 + amp * (profile + 0.2 * wave)
+        radius_map = taper_poles(amp * (profile + 0.2 * wave), self._sin_theta)
 
-        pts = self._base * radial[None, :, None]
+        pts = (self._base * self.scale) * radius_map[..., None]
         rotated = rotate(pts.reshape(-1, 3), self.tilt, self.angle)
         xs, ys = project(rotated, self.width, self.height, self.focal)
         colors = _shade(rotated, self.focal, self.angle)
@@ -166,6 +177,6 @@ class SphereMeshVisualizer:
         surface.fill((0, 0, 0))
         _draw_wireframe(surface, xs, ys, colors, n, wrap=True)
 
-        self.angle += 0.01 + 0.3 * treble + (0.02 if beat else 0.0)
+        self.angle += 0.006 + 0.3 * treble + (0.02 if beat else 0.0)
         frame = pygame.surfarray.array3d(surface)
         return frame.swapaxes(0, 1).copy()
