@@ -9,8 +9,10 @@ import pytest
 pygame = pytest.importorskip("pygame")
 
 from milkdrop.visualizer.mesh import (
+    SphereMeshVisualizer,
     WireframeMeshVisualizer,
     make_grid,
+    make_sphere,
     project,
     rotate,
 )
@@ -59,6 +61,33 @@ def test_wireframe_visualizer_renders_uint8_and_reacts_to_audio():
     pygame.init()
     try:
         viz = WireframeMeshVisualizer(width=64, height=40, num_bands=8)
+
+        silence = viz.render(np.zeros(8), beat=False)
+        assert silence.shape == (40, 64, 3)
+        assert silence.dtype == np.uint8
+
+        loud = None
+        for _ in range(3):
+            loud = viz.render(np.linspace(0.0, 1.0, 8), beat=True)
+
+        assert loud.shape == (40, 64, 3)
+        assert not np.array_equal(silence, loud)
+    finally:
+        pygame.quit()
+
+
+def test_make_sphere_places_vertices_on_radius():
+    sphere = make_sphere(6, radius=1.5)
+
+    assert sphere.shape == (36, 3)
+    assert np.allclose(np.linalg.norm(sphere, axis=1), 1.5)
+    assert sphere[:, 1].min() < 0.0 < sphere[:, 1].max()
+
+
+def test_sphere_visualizer_renders_uint8_and_reacts_to_audio():
+    pygame.init()
+    try:
+        viz = SphereMeshVisualizer(width=64, height=40, num_bands=8)
 
         silence = viz.render(np.zeros(8), beat=False)
         assert silence.shape == (40, 64, 3)

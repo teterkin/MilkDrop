@@ -67,6 +67,10 @@ def test_v_switches_visualizer_mode_and_updates_config(tmp_path):
         assert app.config.visualizer == "whitecap"
 
         app._handle_action("visualize")
+        assert app.mode_name == "sphere"
+        assert app.config.visualizer == "sphere"
+
+        app._handle_action("visualize")
         assert app.mode_name == "milkdrop"
 
         frame = app.compute_frame()
