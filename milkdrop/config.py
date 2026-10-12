@@ -11,6 +11,7 @@ class Config:
     fullscreen: bool = False
     width: int = 960
     height: int = 540
+    visualizer: str = "milkdrop"
 
     @classmethod
     def load(cls, path):
@@ -23,4 +24,6 @@ class Config:
         return cls(**filtered)
 
     def save(self, path):
-        Path(path).write_text(json.dumps(asdict(self), indent=2) + "\n")
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(asdict(self), indent=2) + "\n")

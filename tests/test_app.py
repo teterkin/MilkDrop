@@ -49,3 +49,26 @@ def test_run_loop_exits_on_quit_event(tmp_path):
     app.run()
     assert app.running is False
 
+
+def test_v_switches_visualizer_mode_and_updates_config(tmp_path):
+    wav = tmp_path / "tone.wav"
+    _make_wav(wav)
+
+    app = MilkDropApp(str(wav), Config(width=64, height=48, visualizer="milkdrop"))
+    try:
+        assert app.mode_name == "milkdrop"
+
+        app._handle_action("visualize")
+        assert app.mode_name == "fractal"
+        assert app.config.visualizer == "fractal"
+
+        app._handle_action("visualize")
+        assert app.mode_name == "milkdrop"
+
+        frame = app.compute_frame()
+        assert frame.shape == (INTERNAL_HEIGHT, INTERNAL_WIDTH, 3)
+        assert frame.dtype == np.uint8
+    finally:
+        pygame.quit()
+
+

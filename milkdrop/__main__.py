@@ -31,6 +31,7 @@ def main(argv=None):
         return 1
 
     app.run()
+    config.save(CONFIG_PATH)
     return 0
 
 

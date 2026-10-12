@@ -38,3 +38,21 @@ def test_save_then_load_round_trips(tmp_path):
 
     assert reloaded == original
 
+
+def test_visualizer_field_defaults_and_round_trips(tmp_path):
+    assert Config().visualizer == "milkdrop"
+
+    path = tmp_path / "c.json"
+    Config(visualizer="fractal").save(path)
+
+    assert Config.load(path).visualizer == "fractal"
+
+
+def test_save_creates_missing_parent_directories(tmp_path):
+    path = tmp_path / "a" / "b" / "c.json"
+
+    Config().save(path)
+
+    assert path.is_file()
+
+

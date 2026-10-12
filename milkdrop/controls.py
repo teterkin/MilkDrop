@@ -31,6 +31,8 @@ def apply_key(key, player, playlist):
         playlist.shuffle = not playlist.shuffle
         playlist._queue = []
         return "shuffle"
+    if key == pygame.K_v:
+        return "visualize"
     if key == pygame.K_r:
         index = (REPEAT_CYCLE.index(playlist.repeat) + 1) % len(REPEAT_CYCLE)
         playlist.repeat = REPEAT_CYCLE[index]

@@ -1,6 +1,21 @@
 import numpy as np
 
 
+def palette(t, phase=0.0):
+    t = np.asarray(t, dtype=np.float32) + np.float32(phase)
+
+    a = np.array([0.5, 0.5, 0.5], dtype=np.float32)
+    b = np.array([0.5, 0.5, 0.5], dtype=np.float32)
+    c = np.array([1.0, 1.0, 1.0], dtype=np.float32)
+    d = np.array([0.0, 0.33, 0.67], dtype=np.float32)
+
+    if t.ndim == 0:
+        rgb = a + b * np.cos(2.0 * np.pi * (t * c + d))
+    else:
+        rgb = a + b * np.cos(2.0 * np.pi * (t[..., None] * c + d))
+    return np.clip(rgb * 255.0, 0.0, 255.0).astype(np.uint8)
+
+
 def _bilinear(frame, x, y):
     h, w = frame.shape[:2]
     x0 = np.floor(x).astype(np.int32)

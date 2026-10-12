@@ -32,6 +32,13 @@ def test_space_toggles_pause_and_escape_quits():
     assert apply_key(pygame.K_ESCAPE, player, playlist) == "quit"
 
 
+def test_v_requests_visualization_switch():
+    player = FakePlayer()
+    playlist = Playlist([])
+
+    assert apply_key(pygame.K_v, player, playlist) == "visualize"
+
+
 def test_arrows_seek_and_change_volume():
     player = FakePlayer()
     playlist = Playlist([])

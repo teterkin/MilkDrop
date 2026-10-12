@@ -5,7 +5,7 @@ from milkdrop.audio import AudioPlayer
 from milkdrop.controls import apply_key
 from milkdrop.playlist import Playlist, scan_folder
 from milkdrop.timefmt import format_time
-from milkdrop.visualizer.render import Visualizer
+from milkdrop.visualizer import VISUALIZERS, cycle
 
 SAMPLE_RATE = 44100
 INTERNAL_WIDTH = 480
@@ -33,12 +33,26 @@ class MilkDropApp:
         self.player = AudioPlayer(pygame.mixer.music, sample_rate=SAMPLE_RATE)
         self.analyzer = SpectrumAnalyzer(SAMPLE_RATE, num_bands=64, smoothing=0.6)
         self.beat = BeatDetector()
-        self.visualizer = Visualizer(
-            INTERNAL_WIDTH, INTERNAL_HEIGHT, num_bands=64
-        )
+        self.visualizers = {
+            name: factory(INTERNAL_WIDTH, INTERNAL_HEIGHT, num_bands=64)
+            for name, factory in VISUALIZERS.items()
+        }
+        self.mode_names = list(self.visualizers)
+        if config.visualizer in self.visualizers:
+            self.mode_index = self.mode_names.index(config.visualizer)
+        else:
+            self.mode_index = 0
 
         self.running = False
         self._load_current()
+
+    @property
+    def mode_name(self):
+        return self.mode_names[self.mode_index]
+
+    @property
+    def visualizer(self):
+        return self.visualizers[self.mode_name]
 
     def _load_current(self):
         if not self.playlist.current:
@@ -64,6 +78,9 @@ class MilkDropApp:
             self.running = False
         elif action in ("next", "prev"):
             self._load_current()
+        elif action == "visualize":
+            self.mode_index = cycle(self.mode_index, len(self.mode_names))
+            self.config.visualizer = self.mode_name
 
     def _blit_frame(self, frame):
         surface = pygame.surfarray.make_surface(
@@ -85,6 +102,7 @@ class MilkDropApp:
             f"{name}  {format_time(self.player.position())}/{format_time(duration)}"
             f"  vol {int(self.player.volume * 100)}%"
             f"  repeat:{self.playlist.repeat}"
+            f"  viz:{self.mode_name}"
             f"  {'shuffle ' if self.playlist.shuffle else ''}{status}"
         )
         label = self.font.render(line, True, (235, 235, 235))
