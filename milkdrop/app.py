@@ -16,6 +16,8 @@ class MilkDropApp:
     def __init__(self, start_path, config):
         self.config = config
 
+        tracks = scan_folder(start_path)
+
         pygame.init()
         pygame.mixer.init(frequency=SAMPLE_RATE, size=-16, channels=2)
 
@@ -25,7 +27,6 @@ class MilkDropApp:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 24)
 
-        tracks = scan_folder(start_path)
         self.playlist = Playlist(
             tracks, repeat=config.repeat, shuffle=config.shuffle
         )

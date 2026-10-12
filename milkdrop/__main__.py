@@ -1,8 +1,10 @@
 import argparse
+import sys
 from pathlib import Path
 
 from milkdrop.app import MilkDropApp
 from milkdrop.config import Config
+from milkdrop.playlist import PlaylistError
 
 CONFIG_PATH = Path.home() / ".config" / "milkdrop" / "config.json"
 
@@ -22,7 +24,12 @@ def main(argv=None):
     if args.fullscreen:
         config.fullscreen = True
 
-    app = MilkDropApp(args.path, config)
+    try:
+        app = MilkDropApp(args.path, config)
+    except PlaylistError as exc:
+        print(f"milkdrop: {exc}", file=sys.stderr)
+        return 1
+
     app.run()
     return 0
 

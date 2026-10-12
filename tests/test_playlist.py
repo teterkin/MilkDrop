@@ -1,7 +1,9 @@
 from pathlib import Path
 import random
 
-from milkdrop.playlist import Playlist, scan_folder
+import pytest
+
+from milkdrop.playlist import Playlist, PlaylistError, scan_folder
 
 
 def test_scan_folder_returns_only_mp3_sorted_case_insensitive(tmp_path):
@@ -58,5 +60,17 @@ def test_shuffle_next_visits_every_track_once_before_repeating():
     assert seen == set(tracks)
 
 
+def test_scan_folder_raises_playlist_error_with_guidance_when_unreadable(
+    tmp_path, monkeypatch
+):
+    def boom(self):
+        raise PermissionError(1, "Operation not permitted")
 
+    monkeypatch.setattr(Path, "iterdir", boom)
 
+    with pytest.raises(PlaylistError) as excinfo:
+        scan_folder(tmp_path)
+
+    message = str(excinfo.value)
+    assert str(tmp_path) in message
+    assert "Full Disk Access" in message

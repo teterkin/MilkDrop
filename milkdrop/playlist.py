@@ -2,6 +2,10 @@ import random
 from pathlib import Path
 
 
+class PlaylistError(Exception):
+    pass
+
+
 class Playlist:
     def __init__(self, tracks=None, repeat="off", shuffle=False, rng=None):
         self.tracks = list(tracks or [])
@@ -57,9 +61,17 @@ def scan_folder(path):
     folder = Path(path)
     if folder.is_file():
         return [folder] if folder.suffix.lower() == ".mp3" else []
+    try:
+        entries = list(folder.iterdir())
+    except OSError as exc:
+        raise PlaylistError(
+            f"cannot read folder '{folder}': {exc}. On macOS, grant your "
+            "terminal Full Disk Access in System Settings > Privacy & Security "
+            "> Full Disk Access (protected folders like ~/Music require it)."
+        ) from exc
     files = [
         p
-        for p in folder.iterdir()
+        for p in entries
         if p.is_file() and p.suffix.lower() == ".mp3"
     ]
     return sorted(files, key=lambda p: p.name.lower())
