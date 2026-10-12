@@ -1,3 +1,5 @@
+import json
+
 from milkdrop.config import Config
 
 
@@ -54,5 +56,24 @@ def test_save_creates_missing_parent_directories(tmp_path):
     Config().save(path)
 
     assert path.is_file()
+
+
+def test_fullscreen_is_not_persisted(tmp_path):
+    path = tmp_path / "c.json"
+
+    Config(fullscreen=True).save(path)
+
+    assert "fullscreen" not in json.loads(path.read_text())
+    assert Config.load(path).fullscreen is False
+
+
+def test_load_ignores_stale_persisted_fullscreen(tmp_path):
+    path = tmp_path / "c.json"
+    path.write_text('{"fullscreen": true, "volume": 0.3}')
+
+    cfg = Config.load(path)
+
+    assert cfg.fullscreen is False
+    assert cfg.volume == 0.3
 
 

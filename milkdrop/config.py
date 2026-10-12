@@ -2,6 +2,8 @@ import json
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
+_UNPERSISTED = frozenset({"fullscreen"})
+
 
 @dataclass
 class Config:
@@ -20,10 +22,19 @@ class Config:
             return cls()
         data = json.loads(path.read_text())
         known = {field.name for field in fields(cls)}
-        filtered = {key: value for key, value in data.items() if key in known}
+        filtered = {
+            key: value
+            for key, value in data.items()
+            if key in known and key not in _UNPERSISTED
+        }
         return cls(**filtered)
 
     def save(self, path):
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(asdict(self), indent=2) + "\n")
+        data = {
+            key: value
+            for key, value in asdict(self).items()
+            if key not in _UNPERSISTED
+        }
+        path.write_text(json.dumps(data, indent=2) + "\n")

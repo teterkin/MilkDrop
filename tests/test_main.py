@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from milkdrop.__main__ import main
@@ -41,4 +43,29 @@ def test_main_saves_selected_visualizer_on_exit(tmp_path, monkeypatch):
 
     assert code == 0
     assert Config.load(config_path).visualizer == "fractal"
+
+
+def test_main_fullscreen_flag_is_applied_but_not_persisted(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.json"
+    monkeypatch.setattr("milkdrop.__main__.CONFIG_PATH", config_path)
+
+    seen = {}
+
+    class FakeApp:
+        def __init__(self, path, config):
+            seen["fullscreen"] = config.fullscreen
+
+        def run(self):
+            pass
+
+    monkeypatch.setattr("milkdrop.__main__.MilkDropApp", FakeApp)
+
+    assert main(["--fullscreen", "song.mp3"]) == 0
+    assert seen["fullscreen"] is True
+
+    saved = json.loads(config_path.read_text())
+    assert saved.get("fullscreen", False) is False
+
+    assert main(["song.mp3"]) == 0
+    assert seen["fullscreen"] is False
 
