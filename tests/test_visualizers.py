@@ -45,7 +45,7 @@ def test_fractal_visualizer_renders_uint8_and_reacts_to_audio():
 
 
 def test_registry_exposes_all_visualizers():
-    assert set(VISUALIZERS) == {"milkdrop", "fractal"}
+    assert set(VISUALIZERS) == {"milkdrop", "fractal", "whitecap"}
 
     for factory in VISUALIZERS.values():
         viz = factory(width=8, height=8, num_bands=4)
