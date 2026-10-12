@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Distribution / build
+build/
+dist/
+
+# Media (never commit audio)
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a
+
+# OS
+.DS_Store
